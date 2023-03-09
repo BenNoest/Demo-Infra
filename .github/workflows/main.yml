@@ -1,0 +1,32 @@
+name: Run Azure Login with OpenID Connect and PowerShell
+on: [push]
+
+permissions:
+      id-token: write
+      contents: read
+      
+jobs: 
+  Windows-latest:
+      runs-on: windows-latest
+      environment: dev
+      steps:
+        - name: OIDC Login to Azure Public Cloud with AzPowershell (enableAzPSSession true)
+          uses: azure/login@v1
+          with:
+            client-id: ${{ secrets.CLIENT_ID }}
+            tenant-id: ${{ secrets.TENANT_ID }}
+            subscription-id: ${{ secrets.SUBSCRIPTION_ID }} 
+            enable-AzPSSession: true
+            
+        - name: Checkout
+          uses: actions/checkout@v3.3.0
+          
+         # Deploy Bicep file
+        - name: deploy
+          uses: azure/arm-deploy@v1
+          with:
+              subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+              resourceGroupName: Ben-KSH-Demo
+              template: ./infra.bicep
+              parameters: 'storagePrefix=mystore storageSKU=Standard_LRS'
+              failOnStdErr: false
